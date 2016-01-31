@@ -1,58 +1,32 @@
-def read_from_file(path:str)->str:
+GRADES = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F', 'P', 'NP', 'NR']
+
+def read_from_file(path:str)->('x', 'y'):
     data = open(path)
-    result = ''
     count = 0
-    first = 1
+    d = {}
     for line in data:
         l = line.split()
-        if len(l) != 3:
+        letter_grade = l[1]
+        if len(l) == 3:
+            final = l[2]
+        else:
             # probably did not go to final
             continue
-        letter_grade = l[1]
-        final = l[2]
-        if letter_grade == 'A+':
-            grade = 4
-        elif letter_grade == 'A':
-            grade = 4
-        elif letter_grade == 'A-':
-            grade = 3.7
-        elif letter_grade == 'B+':
-            grade = 3.3
-        elif letter_grade == 'B':
-            grade = 3
-        elif letter_grade == 'B-':
-            grade = 2.7
-        elif letter_grade == 'C+':
-            grade = 2.3
-        elif letter_grade == 'C':
-            grade = 2
-        elif letter_grade == 'C-':
-            grade = 1.7
-        elif letter_grade == 'D+':
-            grade = 1.3
-        elif letter_grade == 'D':
-            grade = 1
-        elif letter_grade == 'D-':
-            grade = 0.7
-        elif letter_grade == 'F':
-            grade = 0
-        elif letter_grade == 'P':
-            # cannot assume their grades
-            continue
-        elif letter_grade == 'NP':
-            # cannot assume their grades
-            continue
-        elif letter_grade == 'NR':
-            # cannot assume their grades
-            # probably cheated
-            continue
-        if not first:
-            result += ','
-        first = 0
-        result += '[%s,%s]' % (grade, final)
+        if letter_grade not in d:
+            d[letter_grade] = []
+        d[letter_grade].append(float(final))
         count += 1
-    print('Count: %d' % count)
-    return result
+    x = []
+    y = []
+    ordered = sorted(d.items(), key=lambda i: GRADES.index(i[0]))
+    for item in ordered:
+        key = item[0]
+        value = item[1]
+        x.append(key)
+        y.append(value)
+    data.close()
+    print('Processed: %d' % count)
+    return x, y
 
 def render():
     html = '''<!DOCTYPE html>
@@ -61,31 +35,44 @@ def render():
     <title>ICS 31 Fall 2015 Grade Distribution</title>
     <meta charset="utf-8">
     <meta name="author" content="Waitaya Krongapiradee">
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript">
-      google.charts.load('current', {'packages':['corechart']});
-      google.charts.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var data = google.visualization.arrayToDataTable([
-          ['Grade', 'Final Score'],
-          %s
-        ]);
-
-        var options = {
-          title: 'Grade vs. Final Score Comparison',
-          hAxis: {title: 'Grade', minValue: 0, maxValue: 4},
-          vAxis: {title: 'Final Score', minValue: 0, maxValue: 70},
-          legend: 'none'
-        };
-
-        var chart = new google.visualization.ScatterChart(document.getElementById('chart_div'));
-
-        chart.draw(data, options);
-      }
-    </script>
+    <link rel="stylesheet" href="https://necolas.github.io/normalize.css/3.0.2/normalize.css">
+    <script type="text/javascript" src="https://cdn.plot.ly/plotly-1.5.0.min.js"></script>
+    <script type="text/javascript" src="http://numericjs.com/lib/numeric-1.2.6.min.js"></script>
   </head>
   <body>
-    <div id="chart_div" style="width: 900px; height: 500px;"></div>
+    <div id="myDiv" style="width: 900px; height: 500px;"></div>
+    <script type="text/javascript">
+      var xData = %s
+      var yData = %s
+
+      var boxColor = []
+      var allColors = numeric.linspace(0, 360, xData.length)
+      for (var i = 0; i < xData.length; i++) {
+        boxColor.push('hsl('+ allColors[i] +',50%%'+',50%%)')
+      }
+
+      var data = []
+
+      for (var i = 0; i < xData.length; i++) {
+        var result = {
+          type: 'box',
+          name: xData[i],
+          y: yData[i],
+          marker: {
+            color: boxColor[i]
+          }
+        }
+        data.push(result)
+      }
+
+      var layout = {
+        title: 'Grade vs Final Score',
+        width: window.innerWidth,
+        height: window.innerHeight
+      }
+
+      Plotly.newPlot('myDiv', data, layout)
+    </script>
   </body>
 </html>
 '''
