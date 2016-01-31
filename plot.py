@@ -3,6 +3,7 @@ GRADES = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F
 def read_from_file(path:str)->('x', 'y'):
     data = open(path)
     count = 0
+    skipped = 0
     d = {}
     for line in data:
         l = line.split()
@@ -11,6 +12,7 @@ def read_from_file(path:str)->('x', 'y'):
             final = l[2]
         else:
             # probably did not go to final
+            skipped += 1
             continue
         if letter_grade not in d:
             d[letter_grade] = []
@@ -24,8 +26,9 @@ def read_from_file(path:str)->('x', 'y'):
         value = item[1]
         x.append(key)
         y.append(value)
+        print('{:2} => {}'.format(key, len(value)))
     data.close()
-    print('Processed: %d' % count)
+    print('Processed: {}/{}'.format(count, count + skipped))
     return x, y
 
 def render():
@@ -40,44 +43,70 @@ def render():
     <script type="text/javascript" src="http://numericjs.com/lib/numeric-1.2.6.min.js"></script>
   </head>
   <body>
-    <div id="myDiv" style="width: 900px; height: 500px;"></div>
+    <div style="width: 80%; margin: auto">
+        <div id="boxPlot"></div>
+        <div id="gradeDistribution"></div>
+    </div>
     <script type="text/javascript">
-      var xData = %s
-      var yData = %s
+      var xData = {}
+      var yData = {}
 
       var boxColor = []
       var allColors = numeric.linspace(0, 360, xData.length)
-      for (var i = 0; i < xData.length; i++) {
-        boxColor.push('hsl('+ allColors[i] +',50%%'+',50%%)')
-      }
+      for (var i = 0; i < xData.length; i++) {{
+        boxColor.push('hsl(' + allColors[i] + ',50%' + ',50%)')
+      }}
 
-      var data = []
+      var data1 = []
+      var data2 = []
 
-      for (var i = 0; i < xData.length; i++) {
-        var result = {
+      for (var i = 0; i < xData.length; i++) {{
+        var result = {{
           type: 'box',
+          boxpoints: 'all',
           name: xData[i],
           y: yData[i],
-          marker: {
+          marker: {{
             color: boxColor[i]
-          }
-        }
-        data.push(result)
-      }
+          }}
+        }}
+        data1.push(result)
+      }}
 
-      var layout = {
-        title: 'Grade vs Final Score',
-        width: window.innerWidth,
-        height: window.innerHeight
-      }
+      var data2 = [
+        {{
+          x: xData,
+          y: yData.map(y => {{
+            return y.length
+          }}),
+          type: 'bar',
+          marker: {{
+            color: boxColor
+          }}
+        }}
+      ]
 
-      Plotly.newPlot('myDiv', data, layout)
+      var layout1 = {{
+        title: 'Grade vs Final Score'
+      }}
+      var layout2 = {{
+        title: 'Grade Distribution'
+      }}
+
+      Plotly.newPlot('boxPlot', data1, layout1)
+      Plotly.newPlot('gradeDistribution', data2, layout2)
+
+      window.onresize = function() {{
+        Plotly.Plots.resize(document.getElementById('boxPlot'))
+        Plotly.Plots.resize(document.getElementById('gradeDistribution'))
+      }}
     </script>
   </body>
 </html>
 '''
     output = open('index.html','w')
-    output.write(html % read_from_file('ics_31_course_grades.txt'))
+    x, y = read_from_file('ics_31_course_grades.txt')
+    output.write(html.format(x, y))
 
 if __name__ == '__main__':
     render()
