@@ -59,7 +59,7 @@ def render():
     <meta name="author" content="Waitaya Krongapiradee">
     <link rel="stylesheet" href="https://necolas.github.io/normalize.css/3.0.2/normalize.css">
     <script type="text/javascript" src="https://cdn.plot.ly/plotly-1.5.0.min.js"></script>
-    <script type="text/javascript" src="http://numericjs.com/lib/numeric-1.2.6.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
   </head>
   <body>
     <div style="max-width: 1024px; margin: auto">
